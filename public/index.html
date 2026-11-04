@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voos em Reais e Pontos</title>
+  <link rel="icon" href="aviao.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">
+      <img src="aviao.svg" alt="" width="28" height="28">
+      <div>
+        <h1>Voos em Reais e Pontos</h1>
+        <p>Compare a tarifa em dinheiro com Smiles, LATAM Pass e Azul Fidelidade.</p>
+      </div>
+    </div>
+    <span id="aviso-demo" class="selo" hidden>Modo demonstração: dados inventados</span>
+  </header>
+
+  <main>
+    <form id="busca" class="cartao busca" autocomplete="off">
+      <div class="campo">
+        <label for="origem">Origem</label>
+        <input id="origem" name="origem" maxlength="3" placeholder="SSA" required list="aeroportos">
+      </div>
+      <button type="button" id="inverter" class="inverter" title="Inverter origem e destino" aria-label="Inverter origem e destino">⇄</button>
+      <div class="campo">
+        <label for="destino">Destino</label>
+        <input id="destino" name="destino" maxlength="3" placeholder="GRU" required list="aeroportos">
+      </div>
+      <div class="campo">
+        <label for="ida">Ida</label>
+        <input id="ida" name="ida" type="date" required>
+      </div>
+      <div class="campo">
+        <label for="volta">Volta <span class="leve">(opcional)</span></label>
+        <input id="volta" name="volta" type="date">
+      </div>
+      <div class="campo curto">
+        <label for="adultos">Adultos</label>
+        <input id="adultos" name="adultos" type="number" min="1" max="9" value="1">
+      </div>
+
+      <fieldset class="modo">
+        <legend>Pagar com</legend>
+        <label><input type="radio" name="modo" value="ambos" checked> Reais e pontos</label>
+        <label><input type="radio" name="modo" value="reais"> Reais</label>
+        <label><input type="radio" name="modo" value="pontos"> Pontos</label>
+      </fieldset>
+
+      <fieldset class="fontes">
+        <legend>Fontes</legend>
+        <div id="lista-fontes"></div>
+      </fieldset>
+
+      <button type="submit" class="principal" id="botao-buscar">Buscar voos</button>
+    </form>
+
+    <details class="cartao ajustes">
+      <summary>Quanto você paga por 1.000 pontos?</summary>
+      <p class="leve">Usado para converter pontos em reais e saber qual opção sai mais barata. Considere o preço médio que você paga (compra, transferência com bônus etc.).</p>
+      <div id="custos" class="custos"></div>
+    </details>
+
+    <p id="erro" class="erro" role="alert" hidden></p>
+    <section id="resultados" aria-live="polite"></section>
+  </main>
+
+  <datalist id="aeroportos">
+    <option value="SSA">Salvador</option>
+    <option value="GRU">São Paulo – Guarulhos</option>
+    <option value="CGH">São Paulo – Congonhas</option>
+    <option value="VCP">Campinas – Viracopos</option>
+    <option value="GIG">Rio de Janeiro – Galeão</option>
+    <option value="SDU">Rio de Janeiro – Santos Dumont</option>
+    <option value="BSB">Brasília</option>
+    <option value="CNF">Belo Horizonte – Confins</option>
+    <option value="REC">Recife</option>
+    <option value="FOR">Fortaleza</option>
+    <option value="POA">Porto Alegre</option>
+    <option value="CWB">Curitiba</option>
+    <option value="FLN">Florianópolis</option>
+    <option value="MAO">Manaus</option>
+    <option value="BEL">Belém</option>
+    <option value="NAT">Natal</option>
+    <option value="MCZ">Maceió</option>
+    <option value="AJU">Aracaju</option>
+    <option value="IOS">Ilhéus</option>
+    <option value="BPS">Porto Seguro</option>
+    <option value="LIS">Lisboa</option>
+    <option value="MIA">Miami</option>
+    <option value="MCO">Orlando</option>
+    <option value="EZE">Buenos Aires</option>
+    <option value="SCL">Santiago</option>
+  </datalist>
+
+  <template id="modelo-voo">
+    <article class="voo">
+      <div class="horarios">
+        <div><strong class="partida"></strong><span class="origem"></span></div>
+        <div class="meio"><span class="duracao"></span><span class="linha"></span><span class="paradas"></span></div>
+        <div><strong class="chegada"></strong><span class="destino"></span></div>
+      </div>
+      <div class="cia"></div>
+      <ul class="ofertas"></ul>
+    </article>
+  </template>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
