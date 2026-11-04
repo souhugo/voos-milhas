@@ -140,6 +140,22 @@
       </form>
       <p class="leve">Mais vezes por dia aumenta a chance de os sites bloquearem.</p>
     </details>
+    <details class="cartao ajustes" id="cartao-senha">
+      <summary>Senha do app</summary>
+      <div id="senha-local" hidden>
+        <p class="leve">Pedida quando o app é aberto pelo celular (pelo endereço do ngrok ou do Tailscale). Aqui no computador não é pedida. Trocar a senha desconecta todos os aparelhos.</p>
+        <form id="form-senha" class="grade">
+          <label>Nova senha<input name="senha" type="password" minlength="8" autocomplete="new-password" required></label>
+          <label>Repita a senha<input name="repetir" type="password" minlength="8" autocomplete="new-password" required></label>
+          <button type="submit" class="secundario">Salvar senha</button>
+        </form>
+        <p class="leve" id="status-senha"></p>
+      </div>
+      <div id="senha-remota" hidden>
+        <p class="leve">A senha só pode ser trocada no próprio computador.</p>
+        <button type="button" class="secundario" id="sair-app">Sair deste aparelho</button>
+      </div>
+    </details>
     <div class="botoes"><button type="button" class="secundario" id="rodar-agora">Verificar tudo agora</button></div>
     <ul id="lista-avisos" class="avisos"></ul>
   </main>

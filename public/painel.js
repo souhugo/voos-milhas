@@ -13,6 +13,7 @@ async function api(caminho, opcoes = {}) {
     body: opcoes.body ? JSON.stringify(opcoes.body) : undefined,
   });
   const dados = await resposta.json().catch(() => ({}));
+  if (resposta.status === 401 && dados.login) location.replace('/login.html');
   if (!resposta.ok) throw new Error((dados.erros || ['Erro.']).join(' '));
   return dados;
 }
@@ -241,6 +242,35 @@ $('#rodar-agora').addEventListener('click', async (e) => {
   setTimeout(() => { e.target.textContent = 'Verificar tudo agora'; carregarAvisos(); }, 60000);
 });
 
+// ---------- senha ----------
+
+async function prepararSenha() {
+  const sessao = await api('sessao').catch(() => null);
+  if (!sessao) return;
+  $('#senha-local').hidden = !sessao.local;
+  $('#senha-remota').hidden = sessao.local;
+  $('#status-senha').textContent = sessao.temSenha ? 'Senha já criada.' : 'Ainda sem senha: crie uma para poder abrir pelo celular.';
+  if (sessao.local && !sessao.temSenha) $('#cartao-senha').open = true;
+}
+
+$('#form-senha').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  if (f.senha.value !== f.repetir.value) return alert('As senhas não são iguais.');
+  try {
+    await api('senha', { method: 'POST', body: { senha: f.senha.value } });
+    f.reset();
+    $('#status-senha').textContent = 'Senha salva ✓';
+  } catch (erro) {
+    alert(erro.message);
+  }
+});
+
+$('#sair-app').addEventListener('click', async () => {
+  await api('sair', { method: 'POST' }).catch(() => {});
+  location.replace('/login.html');
+});
+
 // ---------- notificações ----------
 
 const ehIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -318,4 +348,5 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
   estadoPush();
 }
 mostrarAba();
+prepararSenha();
 api('avisos').then(({ avisos }) => atualizarContador(avisos)).catch(() => {});

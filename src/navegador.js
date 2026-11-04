@@ -13,7 +13,8 @@ const PASTA_DUMPS = path.resolve('dumps');
 // Com a janela visível os sites bloqueiam bem menos. Use HEADLESS=true para escondê-la.
 const HEADLESS = process.env.HEADLESS === 'true';
 // "chrome" usa o Google Chrome instalado no computador (recomendado).
-const CANAL = process.env.NAVEGADOR ?? 'chrome';
+// "chromium" (ou vazio) usa o Chromium baixado pelo Playwright.
+const CANAL = ['', 'chromium'].includes(process.env.NAVEGADOR ?? 'chrome') ? null : (process.env.NAVEGADOR ?? 'chrome');
 
 let contextoPromessa = null;
 

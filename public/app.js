@@ -21,6 +21,8 @@ function dataMais(dias) {
 }
 
 async function iniciar() {
+  const sessao = await fetch('/api/sessao').then((r) => r.json()).catch(() => null);
+  if (sessao && !sessao.autorizado) { location.replace('/login.html'); return; }
   const form = $('#busca');
   const salvo = ler('busca', {});
   form.origem.value = salvo.origem || '';

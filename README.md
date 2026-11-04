@@ -20,10 +20,15 @@ A busca e as contas rodam no **seu computador**, com a internet dele. Isso é de
 - Esses sites bloqueiam quase sempre os acessos que vêm de servidores na nuvem.
 - **A senha nunca passa pelo app.** "Conectar" só abre o site numa janela do Chrome do computador para você entrar normalmente. A sessão fica salva naquele computador, em `.perfil-navegador/`, como o "lembrar de mim" do navegador.
 - O app só aceita conexões do próprio computador. Ninguém mais na rede da empresa consegue abrir. O celular chega até ele pelo Tailscale, uma rede privada que só os seus aparelhos acessam.
+- Aberto por qualquer endereço que não seja o próprio computador, o app pede uma **senha de acesso**, criada em **Avisos → Senha do app**. Ela só pode ser criada ou trocada no próprio computador.
 
 > **Computador do trabalho:** confirme com a TI se você pode instalar o Tailscale e deixar o app rodando. Redes corporativas às vezes bloqueiam esse tipo de programa ou o acesso automatizado aos sites.
 
 ## Instalação no computador
+
+**No Windows, sem administrador:** siga o [guia passo a passo para Windows](GUIA-WINDOWS.md). Basta baixar o ZIP e dar dois cliques no `iniciar.bat`, que baixa o Node.js portátil sozinho.
+
+Nos outros sistemas, ou se preferir a linha de comando:
 
 1. Instale o [Node.js](https://nodejs.org) 20 ou mais novo e o Google Chrome.
 2. Baixe o projeto e instale as dependências:
@@ -120,7 +125,7 @@ Os sites mudam de tempos em tempos. Se uma busca, um saldo ou o bônus da Livelo
 | `HOST` | `127.0.0.1` | Endereço em que o app escuta. Não mude, a não ser que saiba o que está fazendo |
 | `HOSTS_PERMITIDOS` | – | Outros nomes de endereço aceitos, separados por vírgula (os `*.ts.net` já são aceitos) |
 | `HEADLESS` | `false` | `true` esconde a janela do navegador (mais bloqueios) |
-| `NAVEGADOR` | `chrome` | Canal do Playwright; vazio usa o Chromium do Playwright |
+| `NAVEGADOR` | `chrome` | Canal do Playwright; `chromium` usa o Chromium baixado pelo Playwright |
 | `DEBUG_DUMP` | – | `1` salva em `dumps/` tudo o que cada site devolveu |
 | `PASTA_DADOS` | `dados` | Onde ficam alertas, avisos, saldos e chaves de notificação |
 | `URL_BONUS_LIVELO` | página inicial da Livelo | Página lida para achar os bônus de transferência |
@@ -136,6 +141,8 @@ src/monitor.js          verificações automáticas e alertas de preço
 src/avisos.js           avisos e notificações (Web Push)
 src/navegador.js        abre as páginas no Chrome (Playwright)
 src/dados.js            arquivos JSON em dados/
+src/acesso.js           senha de acesso e sessões dos aparelhos
+iniciar.bat, .ps1       abre o app no Windows sem administrador
 public/                 a tela (HTML, CSS e JS, sem build), manifesto e service worker
 test/                   testes (npm test)
 ```

@@ -1,6 +1,6 @@
 // Service worker: deixa o app instalável, abre a tela mesmo sem rede e mostra as notificações.
-const CACHE = 'voos-v1';
-const ARQUIVOS = ['/', '/index.html', '/estilo.css', '/app.js', '/painel.js', '/valor.js', '/aviao.svg', '/icone-192.png'];
+const CACHE = 'voos-v2';
+const ARQUIVOS = ['/', '/index.html', '/estilo.css', '/app.js', '/painel.js', '/valor.js', '/aviao.svg', '/icone-192.png', '/login.html'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ARQUIVOS)).then(() => self.skipWaiting()));

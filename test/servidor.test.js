@@ -91,3 +91,41 @@ test('serve o manifesto e o service worker', async () => {
   assert.equal(m.headers.get('content-type'), 'application/manifest+json');
   assert.equal((await fetch(`${base}/sw.js`)).status, 200);
 });
+
+// Requisição como se viesse pelo túnel (outro endereço + cabeçalho de repasse).
+const remoto = (caminho, opcoes = {}) => fetch(`${base}${caminho}`, {
+  ...opcoes,
+  headers: { host: 'meupc.tail1234.ts.net', 'x-forwarded-for': '200.1.2.3', 'x-voos': '1', 'content-type': 'application/json', ...opcoes.headers },
+});
+
+test('senha: pelo túnel, pede login; no computador, não', async () => {
+  assert.equal((await fetch(`${base}/api/contas`)).status, 200);
+  const r = await remoto('/api/contas');
+  assert.equal(r.status, 401);
+  assert.equal((await r.json()).login, true);
+  // Mesmo dizendo "localhost", com cabeçalho de repasse continua remoto.
+  assert.equal((await remoto('/api/contas', { headers: { host: 'localhost:3000' } })).status, 401);
+  // Arquivos da tela abrem (não têm dados), para mostrar a página de login.
+  assert.equal((await remoto('/login.html')).status, 200);
+});
+
+test('senha: só pode ser criada no computador, e o login funciona', async () => {
+  assert.equal((await remoto('/api/senha', { method: 'POST', body: JSON.stringify({ senha: 'invasor123' }) })).status, 403);
+  assert.equal((await acao('/api/senha', { senha: 'curta' })).status, 400);
+  assert.equal((await acao('/api/senha', { senha: 'minha-senha-boa' })).status, 200);
+
+  const errada = await remoto('/api/login', { method: 'POST', body: JSON.stringify({ senha: 'nao-e-essa' }) });
+  assert.equal(errada.status, 401);
+
+  const certa = await remoto('/api/login', { method: 'POST', body: JSON.stringify({ senha: 'minha-senha-boa' }) });
+  assert.equal(certa.status, 200);
+  const cookie = certa.headers.get('set-cookie');
+  assert.match(cookie, /HttpOnly; Secure; SameSite=Lax/);
+  const sessao = cookie.split(';')[0];
+
+  assert.equal((await remoto('/api/contas', { headers: { cookie: sessao } })).status, 200);
+  assert.equal((await remoto('/api/contas', { headers: { cookie: 'voos_sessao=' + 'a'.repeat(64) } })).status, 401);
+
+  await remoto('/api/sair', { method: 'POST', headers: { cookie: sessao } });
+  assert.equal((await remoto('/api/contas', { headers: { cookie: sessao } })).status, 401);
+});

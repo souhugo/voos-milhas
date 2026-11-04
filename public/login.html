@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1769e0">
+  <title>Entrar · Voos</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="aviao.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icone-180.png">
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <main class="login">
+    <form id="entrar" class="cartao">
+      <div class="marca">
+        <img src="aviao.svg" alt="" width="28" height="28">
+        <h1>Voos em Reais e Pontos</h1>
+      </div>
+      <div id="sem-senha" hidden>
+        <p>Este app ainda não tem senha.</p>
+        <p class="leve">No computador onde o app está rodando, abra <strong>http://localhost:3000</strong>, vá em <strong>Avisos → Senha do app</strong> e crie uma senha. Depois volte aqui.</p>
+      </div>
+      <div id="com-senha" hidden>
+        <label for="senha">Senha do app</label>
+        <input id="senha" type="password" autocomplete="current-password" required>
+        <button type="submit" class="principal">Entrar</button>
+      </div>
+      <p id="erro" class="erro" role="alert" hidden></p>
+    </form>
+  </main>
+  <script type="module">
+    const erro = document.getElementById('erro');
+    const sessao = await fetch('/api/sessao').then((r) => r.json());
+    if (sessao.autorizado) location.replace('/');
+    document.getElementById(sessao.temSenha ? 'com-senha' : 'sem-senha').hidden = false;
+    document.getElementById('senha').focus();
+    document.getElementById('entrar').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      erro.hidden = true;
+      const r = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-voos': '1' },
+        body: JSON.stringify({ senha: document.getElementById('senha').value }),
+      });
+      if (r.ok) return location.replace('/');
+      erro.textContent = ((await r.json()).erros || ['Erro.']).join(' ');
+      erro.hidden = false;
+    });
+  </script>
+</body>
+</html>

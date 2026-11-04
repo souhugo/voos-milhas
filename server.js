@@ -1,6 +1,6 @@
 // Servidor local: http://localhost:3000
-// Por segurança, só aceita conexões deste computador (127.0.0.1). Para abrir
-// no celular, use o Tailscale (veja o README), que faz a ponte de forma privada.
+// Por segurança, só escuta neste computador (127.0.0.1). Para abrir no celular,
+// use um túnel (ngrok ou Tailscale, veja o README). Pelo túnel, o app pede senha.
 import { readFile } from 'node:fs/promises';
 import http from 'node:http';
 import path from 'node:path';
@@ -12,6 +12,7 @@ if (SO_DEMO) process.env.DEMO = 'true';
 const { chavePublica, avisar, desinscrever, inscrever, listarAvisos } = await import('./src/avisos.js');
 const { buscarTrecho, CONECTORES } = await import('./src/busca.js');
 const { conectar, desconectar, listarContas, verificar } = await import('./src/contas.js');
+const acesso = await import('./src/acesso.js');
 const { ler } = await import('./src/dados.js');
 const { fecharNavegador } = await import('./src/navegador.js');
 const monitor = await import('./src/monitor.js');
@@ -85,7 +86,8 @@ async function rotaBuscar(res, url) {
 const HOSTS_PERMITIDOS = (process.env.HOSTS_PERMITIDOS || '').split(',').map((h) => h.trim()).filter(Boolean);
 export function hostPermitido(host = '') {
   const nome = host.replace(/:\d+$/, '').replace(/^\[|\]$/g, '').toLowerCase();
-  return ['localhost', '127.0.0.1', '::1'].includes(nome) || nome.endsWith('.ts.net') || HOSTS_PERMITIDOS.includes(nome);
+  const tuneis = ['.ts.net', '.ngrok-free.app', '.ngrok-free.dev', '.ngrok.app', '.ngrok.dev'];
+  return ['localhost', '127.0.0.1', '::1'].includes(nome) || tuneis.some((t) => nome.endsWith(t)) || HOSTS_PERMITIDOS.includes(nome);
 }
 
 async function api(req, res, url) {
@@ -93,6 +95,36 @@ async function api(req, res, url) {
   // consegue mandar esse cabeçalho para cá sem permissão (CORS).
   if (req.method !== 'GET' && req.headers['x-voos'] !== '1') return json(res, 403, { erros: ['Proibido.'] });
   const rota = `${req.method} ${url.pathname}`;
+
+  // Acesso: estas rotas funcionam sem estar logado.
+  if (rota === 'GET /api/sessao') {
+    return json(res, 200, { local: acesso.ehLocal(req), temSenha: await acesso.temSenha(), autorizado: await acesso.autorizado(req) });
+  }
+  if (rota === 'POST /api/senha') {
+    // Criar ou trocar a senha: só no próprio computador.
+    if (!acesso.ehLocal(req)) return json(res, 403, { erros: ['A senha só pode ser criada ou trocada no próprio computador.'] });
+    try {
+      await acesso.definirSenha((await lerCorpo(req)).senha);
+    } catch (erro) {
+      return json(res, 400, { erros: [erro.message] });
+    }
+    return json(res, 200, { ok: true });
+  }
+  if (rota === 'POST /api/login') {
+    try {
+      const { token, maxAge } = await acesso.entrar((await lerCorpo(req)).senha, req.headers['user-agent']);
+      res.setHeader('set-cookie', acesso.cookieSessao(token, maxAge));
+      return json(res, 200, { ok: true });
+    } catch (erro) {
+      return json(res, 401, { erros: [erro.message] });
+    }
+  }
+  if (rota === 'POST /api/sair') {
+    await acesso.sair(acesso.lerCookie(req));
+    res.setHeader('set-cookie', acesso.cookieSessao('', 0));
+    return json(res, 200, { ok: true });
+  }
+  if (!(await acesso.autorizado(req))) return json(res, 401, { erros: ['Entre com a senha do app.'], login: true });
   const partes = url.pathname.split('/').filter(Boolean); // ['api', 'contas', 'smiles', 'verificar']
 
   if (rota === 'GET /api/fontes') {
