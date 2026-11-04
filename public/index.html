@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voos em Reais e Pontos</title>
+  <meta name="theme-color" content="#1769e0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Voos">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="aviao.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icone-180.png">
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">
+      <img src="aviao.svg" alt="" width="28" height="28">
+      <div>
+        <h1>Voos em Reais e Pontos</h1>
+        <p>Compare a tarifa em dinheiro com Smiles, LATAM Pass e Azul Fidelidade.</p>
+      </div>
+    </div>
+    <span id="aviso-demo" class="selo" hidden>Modo demonstração: dados inventados</span>
+  </header>
+
+  <nav class="abas" aria-label="Seções">
+    <a href="#buscar" data-aba="buscar"><span aria-hidden="true">🔎</span>Buscar</a>
+    <a href="#contas" data-aba="contas"><span aria-hidden="true">💳</span>Contas</a>
+    <a href="#alertas" data-aba="alertas"><span aria-hidden="true">🔔</span>Alertas</a>
+    <a href="#avisos" data-aba="avisos"><span aria-hidden="true">📬</span>Avisos<b class="contador" hidden></b></a>
+  </nav>
+
+  <main id="aba-buscar" class="aba">
+    <form id="busca" class="cartao busca" autocomplete="off">
+      <div class="campo">
+        <label for="origem">Origem</label>
+        <input id="origem" name="origem" maxlength="3" placeholder="SSA" required list="aeroportos">
+      </div>
+      <button type="button" id="inverter" class="inverter" title="Inverter origem e destino" aria-label="Inverter origem e destino">⇄</button>
+      <div class="campo">
+        <label for="destino">Destino</label>
+        <input id="destino" name="destino" maxlength="3" placeholder="GRU" required list="aeroportos">
+      </div>
+      <div class="campo">
+        <label for="ida">Ida</label>
+        <input id="ida" name="ida" type="date" required>
+      </div>
+      <div class="campo">
+        <label for="volta">Volta <span class="leve">(opcional)</span></label>
+        <input id="volta" name="volta" type="date">
+      </div>
+      <div class="campo curto">
+        <label for="adultos">Adultos</label>
+        <input id="adultos" name="adultos" type="number" min="1" max="9" value="1">
+      </div>
+
+      <fieldset class="modo">
+        <legend>Pagar com</legend>
+        <label><input type="radio" name="modo" value="ambos" checked> Reais e pontos</label>
+        <label><input type="radio" name="modo" value="reais"> Reais</label>
+        <label><input type="radio" name="modo" value="pontos"> Pontos</label>
+      </fieldset>
+
+      <fieldset class="fontes">
+        <legend>Fontes</legend>
+        <div id="lista-fontes"></div>
+      </fieldset>
+
+      <button type="submit" class="principal" id="botao-buscar">Buscar voos</button>
+    </form>
+
+    <details class="cartao ajustes">
+      <summary>Quanto você paga por 1.000 pontos?</summary>
+      <p class="leve">Usado para converter pontos em reais e saber qual opção sai mais barata. Considere o preço médio que você paga (compra, transferência com bônus etc.).</p>
+      <div id="custos" class="custos"></div>
+    </details>
+
+    <p id="erro" class="erro" role="alert" hidden></p>
+    <section id="resultados" aria-live="polite"></section>
+  </main>
+
+  <main id="aba-contas" class="aba" hidden>
+    <div class="cartao">
+      <h2>Contas conectadas</h2>
+      <p class="leve">Toque em <strong>Conectar</strong> e entre na sua conta na janela do Chrome que abre <strong>no computador onde o app está rodando</strong>. A senha não passa pelo app: a sessão fica salva só naquele computador. Depois toque em <strong>Verificar</strong>.</p>
+    </div>
+    <div id="lista-contas"></div>
+    <div class="cartao">
+      <h3>Bônus de transferência da Livelo</h3>
+      <div id="bonus-livelo" class="leve">Ainda não verificado.</div>
+      <button type="button" class="secundario" id="verificar-bonus">Verificar agora</button>
+    </div>
+  </main>
+
+  <main id="aba-alertas" class="aba" hidden>
+    <form id="form-alerta" class="cartao alerta-form" autocomplete="off">
+      <h2>Novo alerta de preço</h2>
+      <p class="leve">O app busca sozinho de tempos em tempos e avisa quando o preço ficar igual ou abaixo do seu limite.</p>
+      <div class="grade">
+        <label>Origem<input name="origem" maxlength="3" placeholder="SSA" required list="aeroportos"></label>
+        <label>Destino<input name="destino" maxlength="3" placeholder="LIS" required list="aeroportos"></label>
+        <label>Data<input name="ida" type="date" required></label>
+        <label>Adultos<input name="adultos" type="number" min="1" max="9" value="1"></label>
+        <label>Pagar com
+          <select name="programa">
+            <option value="">Pontos (qualquer programa)</option>
+            <option>Smiles</option>
+            <option>LATAM Pass</option>
+            <option>Azul Fidelidade</option>
+            <option value="reais">Reais</option>
+          </select></label>
+        <label>Limite<input name="limite" type="number" min="1" step="1" placeholder="70000" required></label>
+      </div>
+      <label class="caixa"><input type="checkbox" name="soDiretos"> Só voos diretos</label>
+      <button type="submit" class="principal">Criar alerta</button>
+      <p class="erro" id="erro-alerta" hidden></p>
+    </form>
+    <div id="lista-alertas"></div>
+  </main>
+
+  <main id="aba-avisos" class="aba" hidden>
+    <div class="cartao" id="cartao-push">
+      <h2>Notificações no celular</h2>
+      <p class="leve" id="texto-push"></p>
+      <div class="botoes">
+        <button type="button" class="principal" id="ativar-push">Ativar notificações</button>
+        <button type="button" class="secundario" id="testar-push" hidden>Enviar teste</button>
+      </div>
+    </div>
+    <details class="cartao ajustes">
+      <summary>Frequência das verificações</summary>
+      <form id="form-config" class="grade">
+        <label>Contas e bônus a cada (horas)<input name="intervaloContasHoras" type="number" min="1" step="1"></label>
+        <label>Alertas de preço a cada (horas)<input name="intervaloAlertasHoras" type="number" min="1" step="1"></label>
+        <label>Avisar bônus Livelo a partir de (%)<input name="bonusMinimo" type="number" min="1" step="5"></label>
+        <label>Avisar pontos vencendo em até (dias)<input name="diasVencimento" type="number" min="1" step="1"></label>
+        <button type="submit" class="secundario">Salvar</button>
+      </form>
+      <p class="leve">Mais vezes por dia aumenta a chance de os sites bloquearem.</p>
+    </details>
+    <details class="cartao ajustes" id="cartao-senha">
+      <summary>Senha do app</summary>
+      <div id="senha-local" hidden>
+        <p class="leve">Pedida quando o app é aberto pelo celular (pelo endereço do ngrok ou do Tailscale). Aqui no computador não é pedida. Trocar a senha desconecta todos os aparelhos.</p>
+        <form id="form-senha" class="grade">
+          <label>Nova senha<input name="senha" type="password" minlength="8" autocomplete="new-password" required></label>
+          <label>Repita a senha<input name="repetir" type="password" minlength="8" autocomplete="new-password" required></label>
+          <button type="submit" class="secundario">Salvar senha</button>
+        </form>
+        <p class="leve" id="status-senha"></p>
+      </div>
+      <div id="senha-remota" hidden>
+        <p class="leve">A senha só pode ser trocada no próprio computador.</p>
+        <button type="button" class="secundario" id="sair-app">Sair deste aparelho</button>
+      </div>
+    </details>
+    <div class="botoes"><button type="button" class="secundario" id="rodar-agora">Verificar tudo agora</button></div>
+    <ul id="lista-avisos" class="avisos"></ul>
+  </main>
+
+  <datalist id="aeroportos">
+    <option value="SSA">Salvador</option>
+    <option value="GRU">São Paulo – Guarulhos</option>
+    <option value="CGH">São Paulo – Congonhas</option>
+    <option value="VCP">Campinas – Viracopos</option>
+    <option value="GIG">Rio de Janeiro – Galeão</option>
+    <option value="SDU">Rio de Janeiro – Santos Dumont</option>
+    <option value="BSB">Brasília</option>
+    <option value="CNF">Belo Horizonte – Confins</option>
+    <option value="REC">Recife</option>
+    <option value="FOR">Fortaleza</option>
+    <option value="POA">Porto Alegre</option>
+    <option value="CWB">Curitiba</option>
+    <option value="FLN">Florianópolis</option>
+    <option value="MAO">Manaus</option>
+    <option value="BEL">Belém</option>
+    <option value="NAT">Natal</option>
+    <option value="MCZ">Maceió</option>
+    <option value="AJU">Aracaju</option>
+    <option value="IOS">Ilhéus</option>
+    <option value="BPS">Porto Seguro</option>
+    <option value="LIS">Lisboa</option>
+    <option value="MIA">Miami</option>
+    <option value="MCO">Orlando</option>
+    <option value="EZE">Buenos Aires</option>
+    <option value="SCL">Santiago</option>
+  </datalist>
+
+  <template id="modelo-voo">
+    <article class="voo">
+      <div class="horarios">
+        <div><strong class="partida"></strong><span class="origem"></span></div>
+        <div class="meio"><span class="duracao"></span><span class="linha"></span><span class="paradas"></span></div>
+        <div><strong class="chegada"></strong><span class="destino"></span></div>
+      </div>
+      <div class="cia"></div>
+      <ul class="ofertas"></ul>
+    </article>
+  </template>
+
+  <script type="module" src="app.js"></script>
+  <script type="module" src="painel.js"></script>
+</body>
+</html>

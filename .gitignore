@@ -2,3 +2,5 @@ node_modules/
 .perfil-navegador/
 dumps/
 .DS_Store
+dados/
+runtime/
