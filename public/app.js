@@ -123,8 +123,8 @@ function desenharResultados() {
   const area = $('#resultados');
   area.innerHTML = '';
   area.append(barra());
-  area.append(secao(`Ida · ${busca.origem} → ${busca.destino}`, busca.ida, ida));
-  if (volta) area.append(secao(`Volta · ${busca.destino} → ${busca.origem}`, busca.volta, volta));
+  area.append(secao(`Ida · ${busca.origem} → ${busca.destino}`, busca.ida, ida, { origem: busca.origem, destino: busca.destino }));
+  if (volta) area.append(secao(`Volta · ${busca.destino} → ${busca.origem}`, busca.volta, volta, { origem: busca.destino, destino: busca.origem }));
 }
 
 function barra() {
@@ -145,7 +145,7 @@ function barra() {
   return div;
 }
 
-function secao(titulo, data, { voos, status }) {
+function secao(titulo, data, { voos, status }, rota) {
   const sec = document.createElement('section');
   sec.className = 'trecho';
   const lista = ordenar(voos.filter((v) => !vista.soDiretos || v.paradas === 0));
@@ -154,8 +154,12 @@ function secao(titulo, data, { voos, status }) {
 
   sec.innerHTML = `
     <header><h2>${titulo}</h2><span class="leve">${dataCurta(data)}</span>
-      ${maisBarato !== null ? `<span class="selo bom">A partir de ${brl.format(maisBarato)}</span>` : ''}</header>
+      ${maisBarato !== null ? `<span class="selo bom">A partir de ${brl.format(maisBarato)}</span>` : ''}
+      <button type="button" class="texto criar-alerta">🔔 Criar alerta</button></header>
     <ul class="status">${status.map(linhaStatus).join('')}</ul>`;
+  $('.criar-alerta', sec).addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('criar-alerta', { detail: { ...rota, ida: data, adultos: ultimo.busca.adultos } }));
+  });
 
   if (!lista.length) {
     sec.insertAdjacentHTML('beforeend', '<p class="cartao vazio">Nenhum voo encontrado nesta data com as fontes escolhidas.</p>');

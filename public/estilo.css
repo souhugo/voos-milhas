@@ -35,6 +35,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 
 body {
   margin: 0;
@@ -135,4 +136,66 @@ fieldset label, .fontes label { display: inline-flex; gap: 6px; align-items: cen
   .busca .curto { grid-column: span 3; }
   fieldset { grid-column: 1 / -1; }
   .voo { grid-template-columns: 1fr; }
+}
+
+/* ---------- abas ---------- */
+:root { --atencao: #9a6700; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --atencao: #e3b341; } }
+
+.abas { max-width: 980px; margin: 0 auto 16px; padding: 0 16px; display: flex; gap: 4px; }
+.abas a {
+  position: relative; display: flex; gap: 6px; align-items: center; padding: 8px 14px; border-radius: 99px;
+  color: var(--leve); text-decoration: none; font-weight: 600;
+}
+.abas a[aria-current] { background: var(--cartao); color: var(--primaria); border: 1px solid var(--borda); }
+.contador {
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--erro); color: #fff;
+  font-size: 0.7rem; display: inline-grid; place-items: center;
+}
+
+h3 { margin: 0; font-size: 1rem; }
+.pequeno { font-size: 0.78rem; }
+.botoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.secundario, .texto {
+  font: inherit; font-weight: 600; padding: 9px 14px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--borda); background: var(--fundo); color: var(--texto);
+}
+.secundario:disabled { opacity: 0.5; cursor: default; }
+.texto { border-color: transparent; background: none; color: var(--primaria); padding: 6px 8px; }
+.trecho > header .criar-alerta { margin-left: auto; font-size: 0.85rem; }
+.selo.atencao { color: var(--atencao); }
+.selo.ruim { background: var(--erro-fundo); color: var(--erro); }
+.erro-texto { color: var(--erro); }
+.bom-texto { color: var(--bom); font-weight: 600; }
+.vazio { text-align: center; }
+
+.conta header, .alerta header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.conta p, .alerta p { margin: 8px 0 0; }
+.saldo { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.vencimentos, .bonus { margin: 6px 0 0; padding-left: 18px; }
+.vencimentos { color: var(--atencao); }
+.alerta.inativo { opacity: 0.6; }
+
+.grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 12px 0; }
+.grade label { display: grid; gap: 4px; font-size: 0.82rem; font-weight: 600; color: var(--leve); }
+.caixa { display: inline-flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+.alerta-form .principal { width: 100%; }
+.alerta-form h2 { margin-bottom: 4px; }
+
+.avisos { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 8px; }
+.aviso { display: grid; gap: 2px; background: var(--cartao); border: 1px solid var(--borda); border-left: 4px solid var(--primaria); border-radius: 8px; padding: 10px 14px; }
+.aviso.preco, .aviso.bonus { border-left-color: var(--bom); }
+.aviso.vencimento, .aviso.conta { border-left-color: var(--atencao); }
+
+@media (max-width: 760px) {
+  body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+  .abas {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; margin: 0; max-width: none;
+    background: var(--cartao); border-top: 1px solid var(--borda);
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); justify-content: space-around;
+  }
+  .abas a { flex-direction: column; gap: 0; font-size: 0.72rem; padding: 4px 10px; border-radius: 10px; }
+  .abas a span { font-size: 1.25rem; }
+  .abas a[aria-current] { border-color: transparent; background: var(--fundo); }
+  .contador { position: absolute; top: 0; right: 4px; }
 }

@@ -48,11 +48,22 @@ export async function fecharNavegador() {
   await ctx?.close().catch(() => {});
 }
 
+/** Abre uma página e deixa aberta (usado para você fazer login). */
+export async function abrirPagina(url) {
+  const ctx = await contexto();
+  const pagina = await ctx.newPage();
+  await pagina.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 }).catch(() => {});
+  await pagina.bringToFront().catch(() => {});
+  return pagina;
+}
+
 /**
- * Abre `url` e devolve os corpos JSON das respostas cujo endereço passa em `filtro`.
- * Espera a primeira resposta útil e depois mais `folgaMs` sem novidades.
+ * Abre `url`, guarda os corpos JSON das respostas cujo endereço passa em `filtro`
+ * e devolve também o endereço final (para saber se o site mandou para o login)
+ * e o texto visível da página. Espera a primeira resposta útil e depois mais
+ * `folgaMs` sem novidades.
  */
-export async function capturarJson({ fonte, url, filtro, timeoutMs = 60000, folgaMs = 4000 }) {
+export async function visitar({ fonte, url, filtro, timeoutMs = 60000, folgaMs = 4000, desistirSemRespostaMs = timeoutMs }) {
   const ctx = await contexto();
   const pagina = await ctx.newPage();
   const capturas = [];
@@ -71,13 +82,20 @@ export async function capturarJson({ fonte, url, filtro, timeoutMs = 60000, folg
     }
   });
 
+  let urlFinal = url;
+  let texto = '';
   try {
     await pagina.goto(url, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
-    const limite = Date.now() + timeoutMs;
+    const inicio = Date.now();
+    const limite = inicio + timeoutMs;
     while (Date.now() < limite) {
       if (ultimaEm && Date.now() - ultimaEm > folgaMs) break;
+      // Sem nenhuma resposta útil até aqui: provavelmente não vai vir.
+      if (!ultimaEm && Date.now() - inicio > desistirSemRespostaMs) break;
       await pagina.waitForTimeout(500);
     }
+    urlFinal = pagina.url();
+    texto = await pagina.evaluate(() => document.body?.innerText || '').catch(() => '');
   } finally {
     await pagina.close().catch(() => {});
   }
@@ -85,11 +103,23 @@ export async function capturarJson({ fonte, url, filtro, timeoutMs = 60000, folg
   if (process.env.DEBUG_DUMP) {
     await mkdir(PASTA_DUMPS, { recursive: true });
     const arquivo = path.join(PASTA_DUMPS, `${fonte}-${Date.now()}.json`);
-    await writeFile(arquivo, JSON.stringify({ url, capturas }, null, 2));
+    await writeFile(arquivo, JSON.stringify({ url, urlFinal, capturas, texto: texto.slice(0, 20000) }, null, 2));
   }
+  return { capturas, urlFinal, texto };
+}
 
+/** Como `visitar`, mas exige ao menos uma resposta JSON. */
+export async function capturarJson(opcoes) {
+  const { capturas } = await visitar(opcoes);
   if (!capturas.length) {
     throw new Error('O site não devolveu resultados (pode ter pedido captcha ou mudado o formato).');
   }
   return capturas;
+}
+
+/** Apaga os cookies de um site (sai da conta). */
+export async function limparCookies(dominio) {
+  const ctx = await contexto();
+  const escapado = dominio.replace(/\./g, '\\.');
+  await ctx.clearCookies({ domain: new RegExp(`(^|\\.)${escapado}$`) });
 }
